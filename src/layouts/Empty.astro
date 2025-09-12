@@ -1,5 +1,5 @@
 ---
-import "../styles/global.css";
+import "@styles/global.css";
 ---
 
 <!doctype html>
@@ -11,5 +11,9 @@ import "../styles/global.css";
         <meta name="generator" content={Astro.generator} />
         <title>UTN Base Front</title>
     </head>
-    <body> </body>
+    <body>
+        <main>
+            <slot />
+        </main>
+    </body>
 </html>
