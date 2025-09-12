@@ -9,12 +9,13 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/node": "^9.4.2",
-    "@astrojs/svelte": "^7.1.0",
-    "@tailwindcss/vite": "^4.1.12",
-    "astro": "^5.13.2",
-    "svelte": "^5.38.2",
-    "tailwindcss": "^4.1.12",
+    "@astrojs/node": "^9.4.3",
+    "@astrojs/svelte": "^7.1.1",
+    "@tailwindcss/vite": "^4.1.13",
+    "astro": "^5.13.7",
+    "jwt-decode": "^4.0.0",
+    "svelte": "^5.38.10",
+    "tailwindcss": "^4.1.13",
     "typescript": "^5.9.2"
   }
 }
