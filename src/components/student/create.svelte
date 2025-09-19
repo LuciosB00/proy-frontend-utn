@@ -1,15 +1,14 @@
 <script lang="ts">
     import { http } from "@src/core/http";
-    import type { ModalType, User } from "@src/interfaces/user.interface";
+    import type { ModalType } from "@src/interfaces/student.interface";
 
     interface Props {
-        openModalEdit: boolean;
+        openModalCreate: boolean;
         closeModal: (modal: ModalType) => void;
-        getAllUsers: () => Promise<void>;
-        user: User | undefined;
+        getAllStudents: () => Promise<void>;
     }
 
-    const { openModalEdit, closeModal, getAllUsers, user }: Props = $props();
+    const { openModalCreate, closeModal, getAllStudents }: Props = $props();
 
     let loading = $state(false);
     let error = $state(null);
@@ -21,12 +20,12 @@
             error = null;
             const formData = new FormData(event.target as HTMLFormElement);
             const data = Object.fromEntries(formData);
-            await http.patch(
-                `${import.meta.env["PUBLIC_BACKEND_API"]}/user/${user?.id}`,
-                data,
+            await http.post(
+                `${import.meta.env["PUBLIC_BACKEND_API"]}/student`,
+                data
             );
-            await getAllUsers();
-            closeModal("edit");
+            await getAllStudents();
+            closeModal("create");
         } catch (e: any) {
             error = e.message;
         } finally {
@@ -35,11 +34,11 @@
     };
 </script>
 
-{#if openModalEdit}
+{#if openModalCreate}
     <div class="modal-backdrop">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>EDITAR EL USUARIO</h2>
+                <h2>CREAR ESTUDIANTE</h2>
                 <button class="close-btn" aria-label="cerrar boton"> </button>
             </div>
 
@@ -49,38 +48,29 @@
 
             <form onsubmit={handleSubmit} class="space-y-4">
                 <div class="form-group">
-                    <label for="fullName">Nombre Completo:</label>
-                    <input
-                        type="text"
-                        id="fullName"
-                        name="fullName"
-                        value={user?.fullName}
-                        required
-                    />
+                    <label for="dni">DNI:</label>
+                    <input type="number" id="dni" name="dni" required />
                 </div>
 
                 <div class="form-group">
-                    <label for="email">Correo electrónico:</label>
-                    <input
-                        type="email"
-                        id="email"
-                        value={user?.email}
-                        name="email"
-                        required
-                    />
+                    <label for="dateBirth">Fecha de Nacimiento:</label>
+                    <input type="date" id="dateBirth" name="dateBirth" />
                 </div>
 
                 <div class="form-group">
-                    <label for="password">Actualizar contraseña:</label>
-                    <input type="password" id="password" name="password" />
+                    <label for="phone">Teléfono:</label>
+                    <input type="tel" id="phone" name="phone" />
+                </div>
+
+                <div class="form-group">
+                    <label for="address">Dirección:</label>
+                    <input type="text" id="address" name="address" />
                 </div>
 
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-success"
-                        >Aceptar</button
-                    >
+                    <button type="submit" class="btn btn-success">Aceptar</button>
                     <button
-                        onclick={() => closeModal("edit")}
+                        onclick={() => closeModal("create")}
                         type="button"
                         class="btn btn-danger">Cancelar</button
                     >
@@ -117,13 +107,6 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: 20px;
-    }
-
-    .close-btn {
-        background: none;
-        border: none;
-        font-size: 24px;
-        cursor: pointer;
     }
 
     .form-group {

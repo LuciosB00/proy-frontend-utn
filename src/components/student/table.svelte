@@ -4,22 +4,18 @@
     import Delete from "./delete.svelte";
     import Edit from "./edit.svelte";
     import { http } from "@src/core/http";
-    import type { ModalType, User } from "@src/interfaces/user.interface";
+    import type { ModalType, Student } from "@src/interfaces/student.interface";
 
-    let headers = ["Nombre Completo", "Email", "Acciones"];
-    let users = $state<User[]>([]);
-    let user = $state<User>();
+    let headers = ["DNI", "Fecha de Nacimiento", "Teléfono", "Dirección", "Acciones"];
+    let students = $state<Student[]>([]);
+    let student = $state<Student>();
 
     onMount(async () => {
-        await getAllUsers();
+        await getAllStudents();
     });
 
-    const getAllUsers = async () => {
-        users = await fetch("http://localhost:3000/user").then((res) =>
-            res.json(),
-        );
-
-        users = await http.get(`${import.meta.env["PUBLIC_BACKEND_API"]}/user`);
+    const getAllStudents = async () => {
+        students = await http.get(`${import.meta.env["PUBLIC_BACKEND_API"]}/student`);
     };
 
     let openModalCreate = $state(false);
@@ -59,16 +55,16 @@
     };
 </script>
 
-<Create {getAllUsers} {openModalCreate} {closeModal} />
-<Edit {getAllUsers} {openModalEdit} {closeModal} {user} />
-<Delete {getAllUsers} {openModalDelete} {closeModal} {user} />
+<Create {getAllStudents} {openModalCreate} {closeModal} />
+<Edit {getAllStudents} {openModalEdit} {closeModal} {student} />
+<Delete {getAllStudents} {openModalDelete} {closeModal} {student} />
 
 <div class="mb-4">
     <button
         onclick={() => openModal("create")}
         class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
     >
-        Crear Usuario
+        Crear Estudiante
     </button>
 </div>
 
@@ -86,15 +82,23 @@
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
-            {#each users as item}
+            {#each students as item}
                 <tr class="hover:bg-gray-50">
                     <td
                         class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
-                        >{item.fullName}</td
+                        >{item.dni}</td
                     >
                     <td
                         class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
-                        >{item.email}</td
+                        >{item.dateBirth ? new Date(item.dateBirth).toLocaleDateString() : '-'}</td
+                    >
+                    <td
+                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
+                        >{item.phone || '-'}</td
+                    >
+                    <td
+                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
+                        >{item.address || '-'}</td
                     >
                     <td
                         class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 flex gap-4"
@@ -102,7 +106,7 @@
                         <button
                             class="hover:text-blue-500 hover:underline cursor-pointer"
                             onclick={() => {
-                                user = item;
+                                student = item;
                                 openModal("edit");
                             }}
                         >
@@ -112,7 +116,7 @@
                         <button
                             class="hover:text-red-500 hover:underline cursor-pointer"
                             onclick={() => {
-                                user = item;
+                                student = item;
                                 openModal("delete");
                             }}
                         >
