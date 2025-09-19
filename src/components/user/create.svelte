@@ -13,7 +13,7 @@
             error = null;
             const formData = new FormData(event.target as HTMLFormElement);
             const data = Object.fromEntries(formData);
-            await http.post(`${import.meta.env.PUBLIC_BACKEND_API}/user`, data);
+            await http.post(`${import.meta.env["PUBLIC_BACKEND_API"]}/user`, data);
             await getAllUsers();
             closeModal("create");
         } catch (e: any) {
