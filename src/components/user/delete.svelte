@@ -1,14 +1,11 @@
 <script lang="ts">
+    import { http } from "@src/core/http";
     const { openModalDelete, closeModal, getAllUsers, user } = $props();
 
     const handleSubmit = async (event: SubmitEvent) => {
         event.preventDefault();
-        await fetch(`http://localhost:3000/user/${user.id}`, {
-            method: "DELETE",
-            headers: {
-                "Content-Type": "application/json",
-            },
-        });
+        
+        await http.delete(`${import.meta.env.PUBLIC_BACKEND_API}/user/${user.id}`);
 
         closeModal("delete");
         await getAllUsers();

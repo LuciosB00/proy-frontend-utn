@@ -19,7 +19,7 @@
             loading = true;
             error = null;
             await http.delete(
-                `${import.meta.env["PUBLIC_BACKEND_API"]}/student/${student?.id}`
+                `${import.meta.env.PUBLIC_BACKEND_API}/student/${student?.id}`
             );
             await getAllStudents();
             closeModal("delete");

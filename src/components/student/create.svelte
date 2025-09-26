@@ -21,7 +21,7 @@
             const formData = new FormData(event.target as HTMLFormElement);
             const data = Object.fromEntries(formData);
             await http.post(
-                `${import.meta.env["PUBLIC_BACKEND_API"]}/student`,
+                `${import.meta.env.PUBLIC_BACKEND_API}/student`,
                 data
             );
             await getAllStudents();

@@ -3,6 +3,6 @@
 
 declare namespace App {
   interface Locals {
-    PUBLIC_BACKEND_API: string;
+    readonly PUBLIC_BACKEND_API: string;
   }
 }

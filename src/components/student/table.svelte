@@ -15,7 +15,7 @@
     });
 
     const getAllStudents = async () => {
-        students = await http.get(`${import.meta.env["PUBLIC_BACKEND_API"]}/student`);
+        students = await http.get(`${import.meta.env.PUBLIC_BACKEND_API}/student`);
     };
 
     let openModalCreate = $state(false);

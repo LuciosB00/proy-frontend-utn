@@ -22,7 +22,7 @@
             const formData = new FormData(event.target as HTMLFormElement);
             const data = Object.fromEntries(formData);
             await http.patch(
-                `${import.meta.env["PUBLIC_BACKEND_API"]}/student/${student?.id}`,
+                `${import.meta.env.PUBLIC_BACKEND_API}/student/${student?.id}`,
                 data
             );
             await getAllStudents();

@@ -15,11 +15,7 @@
     });
 
     const getAllUsers = async () => {
-        users = await fetch("http://localhost:3000/user").then((res) =>
-            res.json(),
-        );
-
-        users = await http.get(`${import.meta.env["PUBLIC_BACKEND_API"]}/user`);
+        users = await http.get(`${import.meta.env.PUBLIC_BACKEND_API}/user`);
     };
 
     let openModalCreate = $state(false);
