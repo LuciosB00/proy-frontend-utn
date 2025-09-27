@@ -1,5 +1,6 @@
 <script lang="ts">
     import { http } from "@src/core/http";
+    import { type AuthResponse } from "@src/interfaces/user.interface";
     import { jwtDecode } from "jwt-decode";
 
     let email: string = "";
@@ -54,19 +55,30 @@
         loading = true;
 
         try {
-            const res = await fetch(
-                `${import.meta.env["PUBLIC_BACKEND_API"]}/login`,
+            const user = await http.post<AuthResponse>(
+                `${import.meta.env.PUBLIC_BACKEND_API}/auth/login`,
                 {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ email, password }),
+                    email,
+                    password,
                 },
             );
 
-            console.log("Status:", res.status, res.statusText);
-            console.log("Content-Type:", res.headers.get("content-type"));
-            const text = await res.text(); // en vez de res.json()
-            console.log("Response:", text);
+            if (user) {
+                const jwtData = jwtDecode<{
+                    id: string;
+                    iat: number;
+                    exp: number;
+                }>(user?.token);
+
+                const maxAge = jwtData?.exp - jwtData?.iat;
+
+                document.cookie = `token=${user?.token}; path=/; max-age=${maxAge}; SameSite=Lax; secure`;
+                delete user?.token;
+
+                localStorage.setItem("user", JSON.stringify(user));
+
+                location.replace("/");
+            }
         } catch (err) {
             console.error("Error en login:", err);
         } finally {
