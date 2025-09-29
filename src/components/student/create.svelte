@@ -21,15 +21,28 @@
             error = null;
             const formData = new FormData(event.target as HTMLFormElement);
             const data = Object.fromEntries(formData);
+<<<<<<< HEAD
             const password = data["dni"].toString().trim()
             await http.post(`${import.meta.env.PUBLIC_BACKEND_API}/auth/register`, {
                 ...data,
                 role: Role.Student,
                 password: password
             });
+=======
+            const password = data["dni"].toString().trim();
+            await http.post(
+                `${import.meta.env.PUBLIC_BACKEND_API}/auth/register`,
+                {
+                    ...data,
+                    role: Role.STUDENT,
+                    password,
+                },
+            );
+>>>>>>> 33bbc416f22ab57ec19f138b0645532d678da07b
             await getAllStudents();
             closeModal("create");
         } catch (e: any) {
+            console.error(e);
             error = e.message;
         } finally {
             loading = false;
@@ -51,11 +64,17 @@
 
             <form onsubmit={handleSubmit} class="space-y-4">
                 <div class="form-group">
+                    <label for="fullName">Nombre Completo:</label>
+                    <input type="text" id="fullName" name="fullName" />
+                </div>
+
+                <div class="form-group">
                     <label for="dni">DNI:</label>
                     <input type="number" id="dni" name="dni" required />
                 </div>
 
                 <div class="form-group">
+<<<<<<< HEAD
                     <label for="fullName">fullName:</label>
                     <input
                         type="string"
@@ -68,6 +87,10 @@
                 <div class="form-group">
                     <label for="email">email:</label>
                     <input type="string" id="email" name="email" required />
+=======
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required />
+>>>>>>> 33bbc416f22ab57ec19f138b0645532d678da07b
                 </div>
 
                 <div class="modal-footer">
