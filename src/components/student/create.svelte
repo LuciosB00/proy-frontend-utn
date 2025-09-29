@@ -1,6 +1,7 @@
 <script lang="ts">
     import { http } from "@src/core/http";
     import type { ModalType } from "@src/interfaces/student.interface";
+    import { Role } from "@src/interfaces/user.interface";
 
     interface Props {
         openModalCreate: boolean;
@@ -20,10 +21,12 @@
             error = null;
             const formData = new FormData(event.target as HTMLFormElement);
             const data = Object.fromEntries(formData);
-            await http.post(
-                `${import.meta.env.PUBLIC_BACKEND_API}/student`,
-                data
-            );
+            const password = data["dni"].toString().trim()
+            await http.post(`${import.meta.env.PUBLIC_BACKEND_API}/auth/register`, {
+                ...data,
+                role: Role.Student,
+                password: password
+            });
             await getAllStudents();
             closeModal("create");
         } catch (e: any) {
@@ -53,22 +56,24 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="dateBirth">Fecha de Nacimiento:</label>
-                    <input type="date" id="dateBirth" name="dateBirth" />
+                    <label for="fullName">fullName:</label>
+                    <input
+                        type="string"
+                        id="fullName"
+                        name="fullName"
+                        required
+                    />
                 </div>
 
                 <div class="form-group">
-                    <label for="phone">Teléfono:</label>
-                    <input type="tel" id="phone" name="phone" />
-                </div>
-
-                <div class="form-group">
-                    <label for="address">Dirección:</label>
-                    <input type="text" id="address" name="address" />
+                    <label for="email">email:</label>
+                    <input type="string" id="email" name="email" required />
                 </div>
 
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-success">Aceptar</button>
+                    <button type="submit" class="btn btn-success"
+                        >Aceptar</button
+                    >
                     <button
                         onclick={() => closeModal("create")}
                         type="button"

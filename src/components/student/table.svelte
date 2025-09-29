@@ -6,7 +6,13 @@
     import { http } from "@src/core/http";
     import type { ModalType, Student } from "@src/interfaces/student.interface";
 
-    let headers = ["DNI", "Fecha de Nacimiento", "Teléfono", "Dirección", "Acciones"];
+    let headers = [
+        "DNI",
+        "Fecha de Nacimiento",
+        "Teléfono",
+        "Dirección",
+        "Acciones",
+    ];
     let students = $state<Student[]>([]);
     let student = $state<Student>();
 
@@ -15,7 +21,9 @@
     });
 
     const getAllStudents = async () => {
-        students = await http.get(`${import.meta.env.PUBLIC_BACKEND_API}/student`);
+        students = await http.get(
+            `${import.meta.env.PUBLIC_BACKEND_API}/student`,
+        );
     };
 
     let openModalCreate = $state(false);
@@ -88,17 +96,20 @@
                         class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
                         >{item.dni}</td
                     >
+
                     <td
                         class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
-                        >{item.dateBirth ? new Date(item.dateBirth).toLocaleDateString() : '-'}</td
+                        >{item.dateBirth
+                            ? new Date(item.dateBirth).toLocaleDateString()
+                            : "-"}</td
                     >
                     <td
                         class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
-                        >{item.phone || '-'}</td
+                        >{item.phone || "-"}</td
                     >
                     <td
                         class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
-                        >{item.address || '-'}</td
+                        >{item.address || "-"}</td
                     >
                     <td
                         class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 flex gap-4"
