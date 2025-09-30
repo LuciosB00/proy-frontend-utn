@@ -1,10 +1,7 @@
 <script lang="ts">
     import { http } from "@src/core/http";
-<<<<<<< HEAD
     import type { AuthResponse } from "@src/interfaces/user.interface";
-=======
-    import { type AuthResponse } from "@src/interfaces/user.interface";
->>>>>>> 33bbc416f22ab57ec19f138b0645532d678da07b
+
     import { jwtDecode } from "jwt-decode";
 
     let email: string = "";
@@ -61,29 +58,14 @@
         try {
             const user = await http.post<AuthResponse>(
                 `${import.meta.env.PUBLIC_BACKEND_API}/auth/login`,
-<<<<<<< HEAD
-                { email, password }
-=======
                 {
                     email,
                     password,
                 },
->>>>>>> 33bbc416f22ab57ec19f138b0645532d678da07b
             );
 
             if (user) {
                 const jwtData = jwtDecode<{
-<<<<<<< HEAD
-                    exp: any;
-                    iat: any;   
-                    id: number;
-                    email: string;
-                    name: string;
-                }>(user.token);
-                const maxAge = jwtData?.exp - jwtData?.iat;
-
-                document.cookie = `token=${user.token}; max-age=${maxAge}; path=/`;
-=======
                     id: string;
                     iat: number;
                     exp: number;
@@ -92,7 +74,7 @@
                 const maxAge = jwtData?.exp - jwtData?.iat;
 
                 document.cookie = `token=${user?.token}; path=/; max-age=${maxAge}; SameSite=Lax; secure`;
->>>>>>> 33bbc416f22ab57ec19f138b0645532d678da07b
+
                 delete user?.token;
 
                 localStorage.setItem("user", JSON.stringify(user));
