@@ -1,10 +1,10 @@
 export interface User {
-<<<<<<< HEAD
     id: string;
     fullName: string;
     email: string;
     role: Role;
     password?: string;
+    
 }
 
 export enum Role {
@@ -13,18 +13,8 @@ export enum Role {
     Teacher = "TEACHER"
 }
 
-export type ModalType = "create" | "edit" | "delete";
-
 export interface AuthResponse extends User {
     token: string;
-}
-
-=======
-  id: string;
-  fullName: string;
-  email: string;
-  role: Role;
-  password?: string;
 }
 
 export enum Role {
@@ -38,4 +28,3 @@ export type ModalType = "create" | "edit" | "delete";
 export interface AuthResponse extends User {
   token: string;
 }
->>>>>>> 33bbc416f22ab57ec19f138b0645532d678da07b

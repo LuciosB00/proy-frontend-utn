@@ -81,8 +81,8 @@
 
                 location.replace("/");
             }
-        } catch (err) {
-            console.error("Error en login:", err);
+        } catch (err: any) {
+            error = err?.message;
         } finally {
             loading = false;
         }
@@ -98,7 +98,7 @@
                 Iniciar Sesión
             </h2>
         </div>
-        <form class="mt-8 space-y-6" on:submit={handleLogin}>
+        <form class="mt-8 space-y-6" onsubmit={handleLogin}>
             <div class="rounded-md shadow-sm -space-y-px">
                 <div>
                     <label for="email" class="sr-only">Email</label>

@@ -7,8 +7,8 @@
     import type { ModalType, Student } from "@src/interfaces/student.interface";
 
     let headers = [
+        "Nombre Completo",
         "DNI",
-        "Fecha de Nacimiento",
         "Teléfono",
         "Dirección",
         "Acciones",
@@ -93,15 +93,13 @@
             {#each students as item}
                 <tr class="hover:bg-gray-50">
                     <td
-                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
-                        >{item.dni}</td
+                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 capitalize"
+                        >{item.user.fullName}</td
                     >
 
                     <td
                         class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
-                        >{item.dateBirth
-                            ? new Date(item.dateBirth).toLocaleDateString()
-                            : "-"}</td
+                        >{item.dni}</td
                     >
                     <td
                         class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
