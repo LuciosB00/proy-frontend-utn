@@ -11,14 +11,6 @@
     let passwordError: string = "";
     let emailError: string = "";
 
-    interface User {
-        id: number;
-        email: string;
-        name: string;
-        token?: string;
-        deletedAt: Date | null;
-    }
-
     function validateEmail(email: string): boolean {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(email);
@@ -62,7 +54,10 @@
                     email,
                     password,
                 },
+               
             );
+
+            console.log(import.meta.env.PUBLIC_BACKEND_API);
 
             if (user) {
                 const jwtData = jwtDecode<{
@@ -79,10 +74,11 @@
 
                 localStorage.setItem("user", JSON.stringify(user));
 
-                location.replace("/");
+                //location.replace("/");
             }
         } catch (err: any) {
             error = err?.message;
+            console.log(error);
         } finally {
             loading = false;
         }
