@@ -1,6 +1,7 @@
 <script lang="ts">
     import { http } from "@src/core/http";
     import type { ModalType } from "@src/interfaces/teacher.interface";
+    import { Role } from "@src/interfaces/user.interface";
 
     interface Props {
         openModalCreate: boolean;
@@ -20,13 +21,19 @@
             error = null;
             const formData = new FormData(event.target as HTMLFormElement);
             const data = Object.fromEntries(formData);
+            const password = data["dni"].toString().trim();
             await http.post(
-                `${import.meta.env.PUBLIC_BACKEND_API}/teacher`,
-                data
+                `${import.meta.env.PUBLIC_BACKEND_API}/auth/register`,
+                {
+                    ...data,
+                    role: Role.TEACHER,
+                    password,
+                }
             );
             await getAllTeachers();
             closeModal("create");
         } catch (e: any) {
+            console.error(e);
             error = e.message;
         } finally {
             loading = false;
@@ -48,23 +55,18 @@
 
             <form onsubmit={handleSubmit} class="space-y-4">
                 <div class="form-group">
+                    <label for="fullName">Nombre Completo:</label>
+                    <input type="text" id="fullName" name="fullName"/>
+                </div>
+
+                <div class="form-group">
                     <label for="dni">DNI:</label>
-                    <input type="number" id="dni" name="dni" required />
+                    <input type="number" id="dni" name="dni" min="10000000" max="99999999" required />
                 </div>
 
                 <div class="form-group">
-                    <label for="dateBirth">Fecha de Nacimiento:</label>
-                    <input type="date" id="dateBirth" name="dateBirth" />
-                </div>
-
-                <div class="form-group">
-                    <label for="phone">Teléfono:</label>
-                    <input type="tel" id="phone" name="phone" />
-                </div>
-
-                <div class="form-group">
-                    <label for="address">Dirección:</label>
-                    <input type="text" id="address" name="address" />
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required />
                 </div>
 
                 <div class="modal-footer">

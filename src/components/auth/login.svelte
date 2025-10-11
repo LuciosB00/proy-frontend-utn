@@ -47,6 +47,8 @@
         error = "";
         loading = true;
 
+        
+
         try {
             const user = await http.post<AuthResponse>(
                 `${import.meta.env.PUBLIC_BACKEND_API}/auth/login`,
@@ -57,7 +59,7 @@
                
             );
 
-            console.log(import.meta.env.PUBLIC_BACKEND_API);
+            
 
             if (user) {
                 const jwtData = jwtDecode<{
@@ -74,7 +76,7 @@
 
                 localStorage.setItem("user", JSON.stringify(user));
 
-                //location.replace("/");
+                location.replace("/");
             }
         } catch (err: any) {
             error = err?.message;
