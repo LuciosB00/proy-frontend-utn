@@ -1,13 +1,13 @@
 import type { User } from "./user.interface";
 
 export interface Student {
-    id:                string;
-    dni:               number;
+    id: string;
+    dni: number;
     registrationState: string;
-    phone:             null;
-    dateBirth:         null;
-    address:           null;
-    user:              User;
+    phone: null;
+    dateBirth: null;
+    address: null;
+    user: User;
 }
 
 export type ModalType = "create" | "edit" | "delete";

@@ -6,7 +6,13 @@
     import { http } from "@src/core/http";
     import type { ModalType, Teacher } from "@src/interfaces/teacher.interface";
 
-    let headers = ["DNI", "Fecha de Nacimiento", "Teléfono", "Dirección", "Acciones"];
+    let headers = [
+        "Nombre Completo",
+        "DNI",
+        "Teléfono",
+        "Dirección",
+        "Acciones",
+    ];
     let teachers = $state<Teacher[]>([]);
     let teacher = $state<Teacher>();
 
@@ -15,7 +21,9 @@
     });
 
     const getAllTeachers = async () => {
-        teachers = await http.get(`${import.meta.env.PUBLIC_BACKEND_API}/teacher`);
+        teachers = await http.get(
+            `${import.meta.env.PUBLIC_BACKEND_API}/teacher`,
+        );
     };
 
     let openModalCreate = $state(false);
@@ -85,20 +93,25 @@
             {#each teachers as item}
                 <tr class="hover:bg-gray-50">
                     <td
+                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 capitalize"
+                        >{#if item.user}
+                            {item.user.fullName}
+                        {:else}
+                            <span class="text-gray-500">Sin nombre asignado</span>
+                        {/if}</td
+                    >
+
+                    <td
                         class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
                         >{item.dni}</td
                     >
                     <td
                         class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
-                        >{item.dateBirth ? new Date(item.dateBirth).toLocaleDateString() : '-'}</td
+                        >{item.phone || "-"}</td
                     >
                     <td
                         class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
-                        >{item.phone || '-'}</td
-                    >
-                    <td
-                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
-                        >{item.address || '-'}</td
+                        >{item.address || "-"}</td
                     >
                     <td
                         class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 flex gap-4"
