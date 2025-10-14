@@ -6,7 +6,7 @@
     import { http } from "@src/core/http";
     import type { ModalType, Course } from "@src/interfaces/course.interface";
 
-    let headers = ["Nombre", "Año"];
+    let headers = ["Nombre", "Año", "Acciones"];
     let courses = $state<Course[]>([]);
     let course = $state<Course>();
 
@@ -16,7 +16,7 @@
 
     const getAllCourses = async () => {
         courses = await http.get(
-            `${import.meta.env.PUBLIC_BACKEND_API}/course`,
+            `${import.meta.env.PUBLIC_BACKEND_API}/auth/courses`,
         );
     };
 

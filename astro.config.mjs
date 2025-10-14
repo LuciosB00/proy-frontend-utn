@@ -12,6 +12,9 @@ export default defineConfig({
   devToolbar: {
     enabled: false,
   },
+  server: {
+    host: true,
+  },
   output: "server",
   integrations: [svelte()],
   vite: {
