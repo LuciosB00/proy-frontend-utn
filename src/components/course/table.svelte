@@ -16,7 +16,7 @@
 
     const getAllCourses = async () => {
         courses = await http.get(
-            `${import.meta.env.PUBLIC_BACKEND_API}/auth/courses`,
+            `${import.meta.env.PUBLIC_BACKEND_API}/course`,
         );
     };
 
