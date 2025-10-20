@@ -32,10 +32,7 @@
             careerId = course.career?.id ?? "";
         }
     });
-    name = course?.name ?? "";
-    year = course?.year ?? 1;
-    fourMonth = course?.fourMonth ?? "FIRST";
-    careerId = course?.career?.id ?? "";
+
 
     onMount(async () => {
         try {

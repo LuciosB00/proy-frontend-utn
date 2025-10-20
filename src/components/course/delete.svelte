@@ -36,7 +36,9 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2>ELIMINAR CURSO</h2>
-                <button class="close-btn" aria-label="cerrar boton"> </button>
+                <button class="close-btn" aria-label="cerrar boton" onclick={() => closeModal("delete")}>
+                    ✕
+                </button>
             </div>
 
             {#if error}
