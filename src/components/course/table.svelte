@@ -6,7 +6,7 @@
     import { http } from "@src/core/http";
     import type { ModalType, Course } from "@src/interfaces/course.interface";
 
-    let headers = ["Nombre", "Año", "Acciones"];
+    let headers = ["Nombre", "Año", "Cuatrimestre", "Carrera", "Acciones"];
     let courses = $state<Course[]>([]);
     let course = $state<Course>();
 
