@@ -6,7 +6,7 @@
     import { http } from "@src/core/http";
     import type { ModalType, Course } from "@src/interfaces/course.interface";
 
-    let headers = ["Nombre", "Año", "Cuatrimestre", "Carrera", "Acciones"];
+    let headers = ["Nombre", "Carrera", "Año", "Cuatrimestre", "Acciones"];
     let courses = $state<Course[]>([]);
     let course = $state<Course>();
 
@@ -35,8 +35,6 @@
             case "delete":
                 openModalDelete = true;
                 break;
-            default:
-                break;
         }
     };
 
@@ -51,8 +49,16 @@
             case "delete":
                 openModalDelete = false;
                 break;
-            default:
-                break;
+        }
+    };
+
+    const getFourMonthLabel = (value: string) => {
+        switch (value) {
+            case "FIRST": return "1° Cuatrimestre";
+            case "SECOND": return "2° Cuatrimestre";
+            case "THIRD": return "3° Cuatrimestre";
+            case "FOURTH": return "4° Cuatrimestre";
+            default: return "-";
         }
     };
 </script>
@@ -86,19 +92,15 @@
         <tbody class="divide-y divide-gray-200">
             {#each courses as item}
                 <tr class="hover:bg-gray-50">
-                    <td
-                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
-                        >{item.name}</td
-                    >
-
-                    <td
-                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
-                        >{item.year}</td
-                    >
-
-                    <td
-                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 flex gap-4"
-                    >
+                    <td class="px-6 py-4 text-sm text-gray-700">{item.name}</td>
+                    <td class="px-6 py-4 text-sm text-gray-700">
+                        {item.career?.name || "-"}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-700">{item.year}</td>
+                    <td class="px-6 py-4 text-sm text-gray-700">
+                        {getFourMonthLabel(item.fourMonth)}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-700 flex gap-4">
                         <button
                             class="hover:text-blue-500 hover:underline cursor-pointer"
                             onclick={() => {

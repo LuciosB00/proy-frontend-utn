@@ -1,5 +1,6 @@
 <script lang="ts">
     import { http } from "@src/core/http";
+    import { onMount } from "svelte";
     import type { ModalType, Course } from "@src/interfaces/course.interface";
 
     interface Props {
@@ -9,26 +10,73 @@
         course: Course | undefined;
     }
 
-    const { openModalEdit, closeModal, getAllCourses, course }: Props = $props();
+    const { openModalEdit, closeModal, getAllCourses, course }: Props =
+        $props();
+
+    let name = $state(course?.name ?? "");
+    let year = $state<number>(course?.year ?? 1);
+    let fourMonth = $state<"FIRST" | "SECOND" | "THIRD" | "FOURTH">(
+        course?.fourMonth ?? "FIRST",
+    );
+    let careerId = $state<string>(course?.career?.id ?? "");
+    let careers = $state<Array<{ id: string; name: string }>>([]);
 
     let loading = $state(false);
-    let error = $state(null);
+    let error = $state<string | null>(null);
+
+    $effect(() => {
+        if (course) {
+            name = course.name ?? "";
+            year = course.year ?? 1;
+            fourMonth = course.fourMonth ?? "FIRST";
+            careerId = course.career?.id ?? "";
+        }
+    });
+    name = course?.name ?? "";
+    year = course?.year ?? 1;
+    fourMonth = course?.fourMonth ?? "FIRST";
+    careerId = course?.career?.id ?? "";
+
+    onMount(async () => {
+        try {
+            careers = await http.get(
+                `${import.meta.env.PUBLIC_BACKEND_API}/career`,
+            );
+        } catch (err) {
+            console.error("Error al cargar carreras:", err);
+        }
+    });
 
     const handleSubmit = async (event: SubmitEvent) => {
+        event.preventDefault();
         try {
-            event.preventDefault();
             loading = true;
             error = null;
-            const formData = new FormData(event.target as HTMLFormElement);
-            const data = Object.fromEntries(formData);
+
+            if (!name || !careerId || !fourMonth) {
+                error = "Todos los campos son obligatorios";
+                return;
+            }
+            if (Number(year) < 1 || Number(year) > 3) {
+                error = "El año debe estar entre 1 y 3.";
+                return;
+            }
+
+            const body = {
+                name: name.trim(),
+                year: Number(year),
+                careerId,
+                fourMonth,
+            };
+
             await http.patch(
                 `${import.meta.env.PUBLIC_BACKEND_API}/course/${course?.id}`,
-                data
+                body,
             );
             await getAllCourses();
             closeModal("edit");
         } catch (e: any) {
-            error = e.message;
+            error = e.response?.data?.message || e.message;
         } finally {
             loading = false;
         }
@@ -40,7 +88,11 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2>EDITAR CURSO</h2>
-                <button class="close-btn" aria-label="cerrar boton"> </button>
+                <button
+                    class="close-btn"
+                    aria-label="cerrar boton"
+                    onclick={() => closeModal("edit")}>✕</button
+                >
             </div>
 
             {#if error}
@@ -50,27 +102,47 @@
             <form onsubmit={handleSubmit} class="space-y-4">
                 <div class="form-group">
                     <label for="name">Nombre:</label>
-                    <input 
-                        type="text" 
-                        id="name" 
-                        name="name" 
-                        value={course?.name} 
-                        required 
-                    />
+                    <input type="text" id="name" bind:value={name} required />
                 </div>
 
                 <div class="form-group">
                     <label for="year">Año:</label>
-                    <input 
-                        type="number" 
-                        id="year" 
-                        name="year" 
-                        value={course?.year} 
+                    <input
+                        type="number"
+                        id="year"
+                        bind:value={year}
+                        min="1"
+                        max="3"
+                        required
                     />
                 </div>
 
+                <div class="form-group">
+                    <label for="career">Carrera:</label>
+                    <select id="career" bind:value={careerId} required>
+                        <option value="">Seleccionar carrera</option>
+                        {#each careers as c}
+                            <option value={c.id}>{c.name}</option>
+                        {/each}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="fourMonth">Cuatrimestre:</label>
+                    <select id="fourMonth" bind:value={fourMonth} required>
+                        <option value="FIRST">1° Cuatrimestre</option>
+                        <option value="SECOND">2° Cuatrimestre</option>
+                        <option value="THIRD">3° Cuatrimestre</option>
+                        <option value="FOURTH">4° Cuatrimestre</option>
+                    </select>
+                </div>
+
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-success">Aceptar</button>
+                    <button
+                        type="submit"
+                        class="btn btn-success"
+                        disabled={loading}>Aceptar</button
+                    >
                     <button
                         onclick={() => closeModal("edit")}
                         type="button"
