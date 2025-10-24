@@ -30,7 +30,7 @@
                 return;
             }
 
-            await http.put(`${import.meta.env.PUBLIC_BACKEND_API}/career/${career.id}`, {
+            await http.patch(`${import.meta.env.PUBLIC_BACKEND_API}/career/${career.id}`, {
                 name,
                 description,
                 title
