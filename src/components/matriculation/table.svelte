@@ -63,11 +63,11 @@
         ]);
     });
 
-    const courseById = $derived<Record<string, Course>>(() =>
-        Object.fromEntries(courses.map((c) => [c.id, c]))
+    const courseById = $derived(
+        Object.fromEntries(courses.map((c) => [c.id, c])) as Record<string, Course>
     );
-    const studentById = $derived<Record<string, Student>>(() =>
-        Object.fromEntries(students.map((s) => [s.id, s])),
+    const studentById = $derived(
+        Object.fromEntries(students.map((s) => [s.id, s])) as Record<string, Student>
     );
 
     const filteredCourses = $derived(() =>
@@ -125,7 +125,7 @@
 </script>
 
 <Create {openModalCreate} {closeModal} {getAllMatriculations} />
-<Edit {openModalEdit} {closeModal} {getAllMatriculations} {matriculation} />
+<Edit {openModal} {closeModal} {getAllMatriculations} {matriculation} />
 <Delete {openModalDelete} {closeModal} {getAllMatriculations} {matriculation} />
 
 <div class="toolbar">

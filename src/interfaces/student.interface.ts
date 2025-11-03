@@ -1,12 +1,13 @@
+import type { RegistrationState } from "./matriculation.interface";
 import type { User } from "./user.interface";
 
 export interface Student {
-    id: string;
+    registrationState: RegistrationState;
+    id: string; 
     dni: number;
-    registrationState: string;
-    phone: null;
-    dateBirth: null;
-    address: null;
+    phone: string;
+    dateBirth: string;
+    address: string;
     user: User;
 }
 
