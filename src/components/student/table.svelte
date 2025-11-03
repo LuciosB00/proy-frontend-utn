@@ -97,7 +97,9 @@
                         >{#if item.user}
                             {item.user.fullName}
                         {:else}
-                            <span class="text-gray-500">Sin nombre asignado</span>
+                            <span class="text-gray-500"
+                                >Sin nombre asignado</span
+                            >
                         {/if}</td
                     >
 

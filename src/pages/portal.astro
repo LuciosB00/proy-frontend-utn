@@ -1,0 +1,11 @@
+---
+import Student from "@src/layouts/Students.astro";
+import Dash from "@src/components/portal/dash.svelte";
+---
+
+<Student>
+    <section class="px-4 py-6">
+        <h1 class="text-2xl font-bold mb-4">Portal de Estudiantes</h1>
+        <Dash client:load />
+    </section>
+</Student>

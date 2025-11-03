@@ -1,20 +1,20 @@
 export interface User {
-    id: string;
-    fullName: string;
-    email: string;
-    role: Role;
-    password?: string;
-    
+  id: string;
+  fullName: string;
+  email: string;
+  role: Role;
+  password?: string;
+
 }
 
 export enum Role {
-    Admin = "ADMIN",
-    Student = "STUDENT",
-    Teacher = "TEACHER"
+  Admin = "ADMIN",
+  Student = "STUDENT",
+  Teacher = "TEACHER"
 }
 
 export interface AuthResponse extends User {
-    token: string;
+  token: string;
 }
 
 export enum Role {

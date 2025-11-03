@@ -48,7 +48,7 @@
 
     const filteredStudents = $derived(() => {
         if (!selectedCareerId) return students;
-        const courseIds = new Set(filteredCourses.map(c => c.id));
+        const courseIds = new Set(filteredCourses().map(c => c.id));
         const studentIds = new Set(matriculations.filter(m => courseIds.has(m.courseId)).map(m => m.studentId));
         return students.filter(s => studentIds.has(s.id));
     });
@@ -103,7 +103,7 @@
                     <label for="course">Materia:</label>
                     <select id="course" bind:value={courseId} required>
                         <option value="">Seleccionar materia</option>
-                        {#each filteredCourses as c}
+                        {#each filteredCourses() as c}
                             <option value={c.id}>{c.name}</option>
                         {/each}
                     </select>
@@ -112,7 +112,7 @@
                     <label for="student">Estudiante:</label>
                     <select id="student" bind:value={studentId} required>
                         <option value="">Seleccionar estudiante</option>
-                        {#each filteredStudents as s}
+                        {#each filteredStudents() as s}
                             <option value={s.id}>{s.user?.fullName ?? s.id}</option>
                         {/each}
                     </select>

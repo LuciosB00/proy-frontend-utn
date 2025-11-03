@@ -25,7 +25,9 @@
 
     onMount(async () => {
         try {
-            careers = await http.get(`${import.meta.env.PUBLIC_BACKEND_API}/career`);
+            careers = await http.get(
+                `${import.meta.env.PUBLIC_BACKEND_API}/career`,
+            );
         } catch (err) {
             console.error("Error al cargar carreras:", err);
         }
@@ -50,7 +52,10 @@
 
             console.log("Datos enviados:", body);
 
-            await http.post(`${import.meta.env.PUBLIC_BACKEND_API}/course`, body);
+            await http.post(
+                `${import.meta.env.PUBLIC_BACKEND_API}/course`,
+                body,
+            );
             await getAllCourses();
             closeModal("create");
 
@@ -89,12 +94,7 @@
             <form onsubmit={handleSubmit} class="space-y-4">
                 <div class="form-group">
                     <label for="name">Nombre:</label>
-                    <input
-                        type="text"
-                        id="name"
-                        bind:value={name}
-                        required
-                    />
+                    <input type="text" id="name" bind:value={name} required />
                 </div>
 
                 <div class="form-group">
@@ -111,11 +111,7 @@
 
                 <div class="form-group">
                     <label for="career">Carrera:</label>
-                    <select
-                        id="career"
-                        bind:value={careerId}
-                        required
-                    >
+                    <select id="career" bind:value={careerId} required>
                         <option value="">Seleccionar carrera</option>
                         {#each careers as career}
                             <option value={career.id}>{career.name}</option>

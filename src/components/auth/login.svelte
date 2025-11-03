@@ -1,6 +1,6 @@
 <script lang="ts">
     import { http } from "@src/core/http";
-    import type { AuthResponse } from "@src/interfaces/user.interface";
+    import { Role, type AuthResponse } from "@src/interfaces/user.interface";
 
     import { jwtDecode } from "jwt-decode";
 
@@ -47,8 +47,6 @@
         error = "";
         loading = true;
 
-        
-
         try {
             const user = await http.post<AuthResponse>(
                 `${import.meta.env.PUBLIC_BACKEND_API}/auth/login`,
@@ -56,14 +54,12 @@
                     email,
                     password,
                 },
-               
             );
-
-            
 
             if (user) {
                 const jwtData = jwtDecode<{
                     id: string;
+                    role: Role;
                     iat: number;
                     exp: number;
                 }>(user?.token);
@@ -77,6 +73,12 @@
                 localStorage.setItem("user", JSON.stringify(user));
 
                 location.replace("/");
+
+                if (jwtData?.role === Role.ADMIN) {
+                    window.location.href = "/admin";
+                } else {
+                    window.location.href = "/portal";
+                }
             }
         } catch (err: any) {
             error = err?.message;

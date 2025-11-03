@@ -1,0 +1,11 @@
+---
+import RegistrationComponent from "@components/auth/registration.svelte";
+import { http } from "@src/core/http";
+import Students from "@src/layouts/Students.astro";
+
+
+---
+
+<Students title="Login">
+    <RegistrationComponent client:load />
+</Students>
