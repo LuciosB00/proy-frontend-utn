@@ -14,7 +14,14 @@
     import type { Student } from "@src/interfaces/student.interface";
     import type { Matriculation } from "@src/interfaces/matriculation.interface";
 
-    let headers = ["Estudiante", "Carrera", "Fecha", "Estado", "Acciones"];
+    let headers = [
+        "Estudiante",
+        "Carrera",
+        "Materia",
+        "Fecha",
+        "Estado",
+        "Acciones",
+    ];
 
     let attendances = $state<Attendance[]>([]);
     let attendance = $state<Attendance | undefined>(undefined);
@@ -109,12 +116,12 @@
 
     const updateAttendanceStatus = async (
         a: Attendance,
-        status: AttendanceStatus,
+        attendanceState: AttendanceStatus,
     ) => {
         try {
-            const body: any = { status };
+            const body: any = { attendanceState };
             if (!a.attendanceDate) {
-                body.attendanceDate = new Date().toISOString();
+                body.attendanceDate = new Date();
             }
             await http.patch(
                 `${import.meta.env.PUBLIC_BACKEND_API}/attendance/${a.id}`,
@@ -129,7 +136,7 @@
     const updateAttendanceDate = async (a: Attendance, dateStr: string) => {
         try {
             const body: any = {
-                attendanceDate: new Date(dateStr).toISOString(),
+                attendanceDate: new Date(dateStr),
             };
             await http.patch(
                 `${import.meta.env.PUBLIC_BACKEND_API}/attendance/${a.id}`,
@@ -172,7 +179,7 @@
 <div class="toolbar">
     <div class="filters">
         <div class="filter">
-            <label>Carrera</label>
+            <label for="career-select">Carrera</label>
             <select bind:value={selectedCareerId}>
                 <option value="">Todas</option>
                 {#each careers as c}
@@ -181,7 +188,7 @@
             </select>
         </div>
         <div class="filter">
-            <label>Materia</label>
+            <label for="course-select">Materia</label>
             <select bind:value={selectedCourseId}>
                 <option value="">Todas</option>
                 {#each filteredCourses() as c}
@@ -190,7 +197,7 @@
             </select>
         </div>
         <div class="filter">
-            <label>Buscar estudiante</label>
+            <label for="student-search">Buscar estudiante</label>
             <input
                 type="text"
                 placeholder="Nombre..."
@@ -225,6 +232,9 @@
                         "-"}</td
                 >
                 <td>
+                    {a.course?.name ?? courseById[a.courseId]?.name ?? "-"}
+                </td>
+                <td>
                     <input
                         type="date"
                         value={toDateInputValue(a.attendanceDate)}
@@ -237,8 +247,8 @@
                 </td>
                 <td>
                     <select
-                        class={statusClass(a.status)}
-                        bind:value={a.status}
+                        class={statusClass(a.attendanceState)}
+                        bind:value={a.attendanceState}
                         onchange={(e: Event) =>
                             updateAttendanceStatus(
                                 a,

@@ -24,7 +24,7 @@
     let courseId = $state<string>("");
     let studentId = $state<string>("");
     let attendanceDate = $state<string>(""); // opcional
-    let status = $state<"PRESENT" | "LATE" | "ABSENT">("ABSENT");
+    let attendanceState = $state<"PRESENT" | "LATE" | "ABSENT">("ABSENT");
 
     let loading = $state(false);
     let error = $state<string | null>(null);
@@ -58,13 +58,13 @@
         try {
             loading = true;
             error = null;
-            if (!selectedCareerId || !courseId || !studentId || !status) {
+            if (!selectedCareerId || !courseId || !studentId || !attendanceState) {
                 error = "Selecciona carrera, materia, estudiante y estado";
                 return;
             }
-            const body: any = { studentId, courseId, status };
+            const body: any = { studentId, courseId, attendanceState };
             if (attendanceDate) {
-                body.attendanceDate = new Date(attendanceDate).toISOString();
+                body.attendanceDate = new Date(attendanceDate);
             }
             await http.post(`${import.meta.env.PUBLIC_BACKEND_API}/attendance`, body);
             await getAllAttendances();
@@ -118,8 +118,8 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="status">Estado:</label>
-                    <select id="status" bind:value={status}>
+                    <label for="attendanceState">Estado:</label>
+                    <select id="attendanceState" bind:value={attendanceState}>
                         <option value="PRESENT">Presente</option>
                         <option value="LATE">Tarde</option>
                         <option value="ABSENT">Ausente</option>

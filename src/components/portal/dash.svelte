@@ -35,7 +35,6 @@
     let courses = $state<Course[]>([]);
     let careers = $state<Career[]>([]);
 
-    // Variables para la inscripción
     let selectedCareer = $state<Career | null>(null);
     let availableCourses = $state<Course[]>([]);
     let selectedCourses = $state<string[]>([]);
@@ -56,7 +55,6 @@
             const decoded = jwtDecode<{ id: string; role: string }>(token);
             const userId = decoded.id;
 
-            // Obtener la lista de estudiantes y buscar por userId
             const list = await http.get<Student[]>(
                 `${import.meta.env.PUBLIC_BACKEND_API}/student`,
             );
@@ -68,25 +66,21 @@
 
             student = studentFound;
 
-            // Cargar matrículas del estudiante
             const matriculationList = await http.get<Matriculation[]>(
                 `${import.meta.env.PUBLIC_BACKEND_API}/matriculation?studentId=${student.id}`,
             );
             matriculations = matriculationList;
 
-            // Cargar asistencias del estudiante
             const attendanceList = await http.get<Attendance[]>(
                 `${import.meta.env.PUBLIC_BACKEND_API}/attendance?studentId=${student.id}`,
             );
             attendances = attendanceList;
 
-            // Cargar cursos
             const courseList = await http.get<Course[]>(
                 `${import.meta.env.PUBLIC_BACKEND_API}/course`,
             );
             courses = courseList;
 
-            // Cargar carreras disponibles
             const careerList = await http.get<Career[]>(
                 `${import.meta.env.PUBLIC_BACKEND_API}/career`,
             );
@@ -107,28 +101,42 @@
         >,
     );
 
-    const presentCount = $derived(
-        attendances.filter((a) => a.status === "PRESENT").length,
-    );
-    const lateCount = $derived(
-        attendances.filter((a) => a.status === "LATE").length,
-    );
-    const absentCount = $derived(
-        attendances.filter((a) => a.status === "ABSENT").length,
+    const enrolledCourseIds = $derived(
+        new Set(matriculations.map((m) => m.courseId)),
     );
 
-    // Función para actualizar los cursos disponibles cuando se selecciona una carrera
+    const careersForEnrollment = $derived(() =>
+        careers.filter((car) =>
+            courses.some(
+                (course) =>
+                    course.career.id === car.id &&
+                    !enrolledCourseIds.has(course.id),
+            ),
+        ),
+    );
+
+    const presentCount = $derived(
+        attendances.filter((a) => a.attendanceState === "PRESENT").length,
+    );
+    const lateCount = $derived(
+        attendances.filter((a) => a.attendanceState === "LATE").length,
+    );
+    const absentCount = $derived(
+        attendances.filter((a) => a.attendanceState === "ABSENT").length,
+    );
+
     function handleCareerChange(careerId: string) {
         selectedCareer = careers.find((c) => c.id === careerId) || null;
         availableCourses = courses.filter(
-            (course) => course.career.id === careerId,
+            (course) =>
+                course.career.id === careerId &&
+                !enrolledCourseIds.has(course.id),
         );
         selectedCourses = [];
         enrollmentSuccess = false;
         enrollmentError = null;
     }
 
-    // Función para manejar la selección de cursos
     function handleCourseSelection(courseId: string, isChecked: boolean) {
         if (isChecked) {
             selectedCourses = [...selectedCourses, courseId];
@@ -137,7 +145,6 @@
         }
     }
 
-    // Función para inscribirse a los cursos seleccionados
     async function enrollInCourses() {
         try {
             enrollmentSuccess = false;
@@ -153,7 +160,6 @@
                 return;
             }
 
-            // Crear las matrículas para cada curso seleccionado
             const enrollmentPromises = selectedCourses.map((courseId) =>
                 http.post(
                     `${import.meta.env.PUBLIC_BACKEND_API}/matriculation`,
@@ -168,7 +174,6 @@
 
             await Promise.all(enrollmentPromises);
 
-            // Recargar las matrículas del estudiante
             const matriculationList = await http.get<Matriculation[]>(
                 `${import.meta.env.PUBLIC_BACKEND_API}/matriculation?studentId=${student.id}`,
             );
@@ -198,7 +203,6 @@
         </div>
     {:else}
         <div class="max-w-6xl mx-auto px-4 space-y-8">
-            <!-- Encabezado -->
             <div class="flex flex-wrap items-end justify-between gap-4">
                 <div>
                     <h1
@@ -212,7 +216,6 @@
                 </div>
             </div>
 
-            <!-- Tarjeta de perfil -->
             <div
                 class="rounded-xl border border-slate-300 dark:border-slate-600 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 p-6 shadow-md hover:shadow-lg transition-all duration-300"
             >
@@ -327,7 +330,6 @@
                 </div>
             </div>
 
-            <!-- Resumen de asistencias -->
             <div class="grid sm:grid-cols-3 gap-4">
                 <div
                     class="rounded-lg bg-gradient-to-br from-green-100 to-green-200 text-green-800 p-4 shadow-md hover:shadow-lg transition-all duration-300 border border-green-300"
@@ -359,7 +361,6 @@
                 </div>
             </div>
 
-            <!-- Materias inscriptas -->
             <div
                 class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 shadow-sm"
             >
@@ -402,7 +403,6 @@
                 {/if}
             </div>
 
-            <!-- Inscripción a carreras y cursos -->
             <div
                 class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 shadow-sm mt-6"
             >
@@ -427,7 +427,6 @@
                     </div>
                 {/if}
 
-                <!-- Selección de carrera -->
                 <div class="mb-4">
                     <label
                         for="career"
@@ -443,13 +442,12 @@
                             )}
                     >
                         <option value="">Selecciona una carrera</option>
-                        {#each careers as career}
+                        {#each careersForEnrollment() as career}
                             <option value={career.id}>{career.name}</option>
                         {/each}
                     </select>
                 </div>
 
-                <!-- Selección de cursos -->
                 {#if selectedCareer}
                     <div class="mb-4">
                         <h3 class="text-lg font-medium text-white mb-2">

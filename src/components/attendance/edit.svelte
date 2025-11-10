@@ -25,7 +25,7 @@
 
     let studentId = $state<string>("");
     let courseId = $state<string>("");
-    let status = $state<"PRESENT" | "LATE" | "ABSENT">("ABSENT");
+    let attendanceState = $state<"PRESENT" | "LATE" | "ABSENT">("ABSENT");
     let attendanceDate = $state<string>("");
 
     let loading = $state(false);
@@ -35,7 +35,7 @@
         if (attendance) {
             studentId = attendance.student?.id ?? attendance.studentId ?? "";
             courseId = attendance.course?.id ?? attendance.courseId ?? "";
-            status = (attendance.status as any) ?? "ABSENT";
+            attendanceState = (attendance.attendanceState as any) ?? "ABSENT";
             try {
                 if (attendance.attendanceDate) {
                     const dt = new Date(attendance.attendanceDate);
@@ -50,7 +50,7 @@
         } else {
             studentId = "";
             courseId = "";
-            status = "ABSENT";
+            attendanceState = "ABSENT";
             attendanceDate = "";
             selectedCareerId = "";
         }
@@ -81,12 +81,12 @@
         try {
             loading = true;
             error = null;
-            if (!attendance?.id || !studentId || !courseId || !status) {
+            if (!attendance?.id || !studentId || !courseId || !attendanceState) {
                 error = "Todos los campos son obligatorios";
                 return;
             }
-            const body: any = { studentId, courseId, status };
-            if (attendanceDate) body.attendanceDate = new Date(attendanceDate).toISOString();
+            const body: any = { studentId, courseId, attendanceState };
+            if (attendanceDate) body.attendanceDate = new Date(attendanceDate);
             await http.patch(`${import.meta.env.PUBLIC_BACKEND_API}/attendance/${attendance.id}`, body);
             await getAllAttendances();
             closeModal("edit");
@@ -139,8 +139,8 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="status">Estado:</label>
-                    <select id="status" bind:value={status}>
+                    <label for="attendanceState">Estado:</label>
+                    <select id="attendanceState" bind:value={attendanceState}>
                         <option value="PRESENT">Presente</option>
                         <option value="LATE">Tarde</option>
                         <option value="ABSENT">Ausente</option>

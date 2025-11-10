@@ -75,7 +75,7 @@
                 location.replace("/");
 
                 if (jwtData?.role === Role.ADMIN) {
-                    window.location.href = "/admin";
+                    window.location.href = "/";
                 } else {
                     window.location.href = "/portal";
                 }

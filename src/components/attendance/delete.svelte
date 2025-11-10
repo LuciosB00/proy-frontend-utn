@@ -20,7 +20,13 @@
 </script>
 
 {#if openModalDelete}
-  <div class="modal-backdrop" onclick={() => closeModal("delete")}></div>
+  <button
+    type="button"
+    class="modal-backdrop"
+    aria-label="Cerrar modal"
+    onclick={() => closeModal("delete")}
+    onkeydown={(e) => e.key === "Enter" && closeModal("delete")}
+  ></button>
   <div class="modal">
     <div class="modal-header">
       <h3>Eliminar asistencia</h3>
@@ -35,7 +41,7 @@
           <div><strong>Carrera:</strong> {attendance.course?.career?.name ?? "-"}</div>
           <div><strong>Materia:</strong> {attendance.course?.name ?? attendance.courseId}</div>
           <div><strong>Fecha:</strong> {attendance.attendanceDate ? new Date(attendance.attendanceDate).toLocaleDateString() : "(sin fecha)"}</div>
-          <div><strong>Estado:</strong> {attendance.status ?? "-"}</div>
+          <div><strong>Estado:</strong> {attendance.attendanceState ?? "-"}</div>
         </div>
         <p class="warning">Esta acción no se puede deshacer.</p>
       {:else}

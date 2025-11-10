@@ -5,7 +5,7 @@ export interface Attendance {
     studentId: string;
     courseId: string;
     attendanceDate?: Date;
-    status?: AttendanceStatus;
+    attendanceState?: AttendanceStatus;
 
     course?: Course;
     student?: Student;
