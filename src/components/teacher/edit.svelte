@@ -1,6 +1,8 @@
 <script lang="ts">
     import { http } from "@src/core/http";
     import type { ModalType, Teacher } from "@src/interfaces/teacher.interface";
+    import type { Course } from "@src/interfaces/course.interface";
+    import { onMount } from "svelte";
 
     interface Props {
         openModalEdit: boolean;
@@ -13,6 +15,20 @@
 
     let loading = $state(false);
     let error = $state(null);
+    let courses = $state<Course[]>([]);
+    let selectedCourseIds = $state<string[]>([]);
+
+    $effect(() => {
+        selectedCourseIds = (teacher?.courses || []).map(c => c.id);
+    });
+
+    onMount(async () => {
+        try {
+            courses = await http.get(`${import.meta.env.PUBLIC_BACKEND_API}/course`);
+        } catch (e) {
+            console.error(e);
+        }
+    });
 
     const handleSubmit = async (event: SubmitEvent) => {
         try {
@@ -23,7 +39,7 @@
             const data = Object.fromEntries(formData);
             await http.patch(
                 `${import.meta.env.PUBLIC_BACKEND_API}/teacher/${teacher?.id}`,
-                data
+                { ...data, courseIds: selectedCourseIds }
             );
             await getAllTeachers();
             closeModal("edit");
@@ -57,6 +73,25 @@
                         value={teacher?.dni} 
                         required 
                     />
+                </div>
+
+                <div class="form-group">
+                    <label>Materias a cargo:</label>
+                    <div class="chips">
+                        {#each courses as c}
+                            <button
+                                type="button"
+                                class={`chip ${selectedCourseIds.includes(c.id) ? 'chip-selected' : ''}`}
+                                onclick={() => {
+                                    if (selectedCourseIds.includes(c.id)) {
+                                        selectedCourseIds = selectedCourseIds.filter(id => id !== c.id);
+                                    } else {
+                                        selectedCourseIds = [...selectedCourseIds, c.id];
+                                    }
+                                }}
+                            >{c.name}</button>
+                        {/each}
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -146,6 +181,30 @@
         padding: 8px;
         border: 1px solid #ddd;
         border-radius: 4px;
+    }
+
+    .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .chip {
+        border: 1px solid #ccc;
+        border-radius: 16px;
+        padding: 6px 10px;
+        background: #f7f7f7;
+        color: #333;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .chip:hover { background: #eee; }
+
+    .chip-selected {
+        background: #2563eb;
+        border-color: #2563eb;
+        color: white;
     }
 
     .modal-footer {

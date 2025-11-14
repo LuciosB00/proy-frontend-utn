@@ -5,12 +5,14 @@
     import Edit from "./edit.svelte";
     import { http } from "@src/core/http";
     import type { ModalType, Teacher } from "@src/interfaces/teacher.interface";
+    import type { Course } from "@src/interfaces/course.interface";
 
     let headers = [
         "Nombre Completo",
         "DNI",
         "Teléfono",
         "Dirección",
+        "Cursos",
         "Acciones",
     ];
     let teachers = $state<Teacher[]>([]);
@@ -113,6 +115,17 @@
                         class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
                         >{item.address || "-"}</td
                     >
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        <div class="chips">
+                            {#if item.courses && item.courses.length > 0}
+                                {#each item.courses as c}
+                                    <span class="chip chip-static">{c.name}</span>
+                                {/each}
+                            {:else}
+                                <span class="text-gray-500">Sin materias</span>
+                            {/if}
+                        </div>
+                    </td>
                     <td
                         class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 flex gap-4"
                     >
@@ -141,3 +154,19 @@
         </tbody>
     </table>
 </div>
+<style>
+    .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    .chip {
+        border: 1px solid #ccc;
+        border-radius: 14px;
+        padding: 4px 8px;
+        background: #f7f7f7;
+        color: #333;
+        font-size: 12px;
+    }
+    .chip-static { pointer-events: none; }
+</style>
