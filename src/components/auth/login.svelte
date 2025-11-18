@@ -74,10 +74,16 @@
 
                 location.replace("/");
 
-                if (jwtData?.role === Role.ADMIN) {
-                    window.location.href = "/";
-                } else {
-                    window.location.href = "/portal";
+                switch (jwtData?.role) {
+                    case Role.ADMIN:
+                        window.location.href = "/";
+                        break;
+                    case Role.TEACHER:
+                        window.location.href = "/attendance";
+                        break;
+                    default:
+                        window.location.href = "/portal";
+                        break;
                 }
             }
         } catch (err: any) {

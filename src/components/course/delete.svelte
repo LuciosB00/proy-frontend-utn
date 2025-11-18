@@ -46,8 +46,9 @@
             {/if}
 
             <div class="modal-body">
-                <p>¿Está seguro que desea eliminar este curso?</p>
-                <p class="font-semibold">ID: {course?.id}</p>
+                <p>¿Está seguro que desea eliminar el curso
+                    <b>{course?.name}</b>?
+                </p>
             </div>
 
             <div class="modal-footer">

@@ -22,14 +22,6 @@
         selectedCourseIds = (teacher?.courses || []).map(c => c.id);
     });
 
-    onMount(async () => {
-        try {
-            courses = await http.get(`${import.meta.env.PUBLIC_BACKEND_API}/course`);
-        } catch (e) {
-            console.error(e);
-        }
-    });
-
     const handleSubmit = async (event: SubmitEvent) => {
         try {
             event.preventDefault();
@@ -37,9 +29,44 @@
             error = null;
             const formData = new FormData(event.target as HTMLFormElement);
             const data = Object.fromEntries(formData);
+
+            const body: any = {};
+            if (data["dni"] !== undefined) {
+                const dniStr = String((data["dni"] as string) ?? "").trim();
+                if (!/^\d{8}$/.test(dniStr)) {
+                    error =
+                        "dni must be longer than or equal to 8 and shorter than or equal to 8 characters";
+                    loading = false;
+                    return;
+                }
+                body.dni = Number(dniStr);
+            }
+            if (data["dateBirth"]) {
+                const v = (data["dateBirth"] as string).trim();
+                if (v) body.dateBirth = new Date(v);
+            }
+            if (data["phone"] !== undefined) {
+                const phoneStr = String((data["phone"] as string) ?? "").trim();
+                if (phoneStr && phoneStr.length < 10) {
+                    error = "phone must be longer than or equal to 10 characters";
+                    loading = false;
+                    return;
+                }
+                body.phone = phoneStr || null;
+            }
+            if (data["address"] !== undefined) {
+                const addr = String(data["address"] as string).trim();
+                if (addr && addr.length < 10) {
+                    throw new Error(
+                        "address must be longer than or equal to 10 characters",
+                    );
+                }
+                body.address = addr || null;
+            }
+
             await http.patch(
                 `${import.meta.env.PUBLIC_BACKEND_API}/teacher/${teacher?.id}`,
-                { ...data, courseIds: selectedCourseIds }
+                body,
             );
             await getAllTeachers();
             closeModal("edit");
@@ -70,13 +97,16 @@
                         type="number" 
                         id="dni" 
                         name="dni" 
+                        min="10000000"
+                        max="99999999"
+                        step="1"
                         value={teacher?.dni} 
                         required 
                     />
                 </div>
 
                 <div class="form-group">
-                    <label>Materias a cargo:</label>
+                    <label for="courses-chips">Materias a cargo:</label>
                     <div class="chips">
                         {#each courses as c}
                             <button
@@ -110,6 +140,7 @@
                         type="tel" 
                         id="phone" 
                         name="phone" 
+                        minlength="10"
                         value={teacher?.phone} 
                     />
                 </div>

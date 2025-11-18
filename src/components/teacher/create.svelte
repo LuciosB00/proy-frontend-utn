@@ -33,25 +33,27 @@
             error = null;
             const formData = new FormData(event.target as HTMLFormElement);
             const data = Object.fromEntries(formData);
-            const password = data["dni"].toString().trim();
+            const dniStr = String((data["dni"] as string) ?? "").trim();
+            if (!/^\d{8}$/.test(dniStr)) {
+                error =
+                    "dni must be longer than or equal to 8 and shorter than or equal to 8 characters";
+                loading = false;
+                return;
+            }
+            const dniNum = Number(dniStr);
+            const fullName = String((data["fullName"] ?? "") as string).trim();
+            const email = String((data["email"] ?? "") as string).trim();
+            const password = dniStr;
             await http.post(
                 `${import.meta.env.PUBLIC_BACKEND_API}/auth/register`,
                 {
-                    ...data,
+                    fullName,
+                    email,
+                    dni: dniNum,
                     role: Role.TEACHER,
                     password,
                 }
             );
-            // Asignar cursos luego del registro buscando por DNI
-            try {
-                const list = await http.get(`${import.meta.env.PUBLIC_BACKEND_API}/teacher`);
-                const created = list.find((t: any) => t.dni?.toString() === data["dni"].toString());
-                if (created?.id && selectedCourseIds.length > 0) {
-                    await http.patch(`${import.meta.env.PUBLIC_BACKEND_API}/teacher/${created.id}`, { courseIds: selectedCourseIds });
-                }
-            } catch (e) {
-                console.warn('No se pudieron asignar cursos post-registro:', e);
-            }
             await getAllTeachers();
             closeModal("create");
         } catch (e: any) {
@@ -79,25 +81,6 @@
                 <div class="form-group">
                     <label for="fullName">Nombre Completo:</label>
                     <input type="text" id="fullName" name="fullName"/>
-                </div>
-
-                <div class="form-group">
-                    <label>Materias a cargo:</label>
-                    <div class="chips">
-                        {#each courses as c}
-                            <button
-                                type="button"
-                                class={`chip ${selectedCourseIds.includes(c.id) ? 'chip-selected' : ''}`}
-                                onclick={() => {
-                                    if (selectedCourseIds.includes(c.id)) {
-                                        selectedCourseIds = selectedCourseIds.filter(id => id !== c.id);
-                                    } else {
-                                        selectedCourseIds = [...selectedCourseIds, c.id];
-                                    }
-                                }}
-                            >{c.name}</button>
-                        {/each}
-                    </div>
                 </div>
 
                 <div class="form-group">
@@ -167,30 +150,6 @@
         padding: 8px;
         border: 1px solid #ddd;
         border-radius: 4px;
-    }
-
-    .chips {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-
-    .chip {
-        border: 1px solid #ccc;
-        border-radius: 16px;
-        padding: 6px 10px;
-        background: #f7f7f7;
-        color: #333;
-        cursor: pointer;
-        transition: all 0.2s ease-in-out;
-    }
-
-    .chip:hover { background: #eee; }
-
-    .chip-selected {
-        background: #2563eb;
-        border-color: #2563eb;
-        color: white;
     }
 
     .modal-footer {

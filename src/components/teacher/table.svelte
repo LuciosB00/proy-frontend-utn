@@ -6,6 +6,14 @@
     import { http } from "@src/core/http";
     import type { ModalType, Teacher } from "@src/interfaces/teacher.interface";
     import type { Course } from "@src/interfaces/course.interface";
+    import AssignCourse from "./assignCourse.svelte";
+
+
+    interface SelectOption {
+        value: string;
+        label: string;
+        disabled?: boolean;
+    }
 
     let headers = [
         "Nombre Completo",
@@ -17,6 +25,7 @@
     ];
     let teachers = $state<Teacher[]>([]);
     let teacher = $state<Teacher>();
+    let courses = $state<SelectOption[]>([]);
 
     onMount(async () => {
         await getAllTeachers();
@@ -26,6 +35,15 @@
         teachers = await http.get(
             `${import.meta.env.PUBLIC_BACKEND_API}/teacher`,
         );
+
+        courses = (
+            await http.get<Course[]>(
+                `${import.meta.env.PUBLIC_BACKEND_API}/course`,
+            )
+        )?.map((course: Course) => ({
+            value: course.id,
+            label: course.name,
+        }));
     };
 
     let openModalCreate = $state(false);
@@ -63,11 +81,21 @@
                 break;
         }
     };
+
+    let openModalAssign = $state(false);
+
+    const openModalAssignCourse = (value?: boolean) => {
+        if (value !== undefined) {
+            openModalAssign = value;
+        }
+        return openModalAssign;
+    };
 </script>
 
 <Create {getAllTeachers} {openModalCreate} {closeModal} />
 <Edit {getAllTeachers} {openModalEdit} {closeModal} {teacher} />
 <Delete {getAllTeachers} {openModalDelete} {closeModal} {teacher} />
+<AssignCourse {courses} {openModalAssignCourse} {teacher} {getAllTeachers} />
 
 <div class="mb-4">
     <button
@@ -99,7 +127,9 @@
                         >{#if item.user}
                             {item.user.fullName}
                         {:else}
-                            <span class="text-gray-500">Sin nombre asignado</span>
+                            <span class="text-gray-500"
+                                >Sin nombre asignado</span
+                            >
                         {/if}</td
                     >
 
@@ -115,11 +145,15 @@
                         class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
                         >{item.address || "-"}</td
                     >
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                    <td
+                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
+                    >
                         <div class="chips">
                             {#if item.courses && item.courses.length > 0}
                                 {#each item.courses as c}
-                                    <span class="chip chip-static">{c.name}</span>
+                                    <span class="chip chip-static"
+                                        >{c.name}</span
+                                    >
                                 {/each}
                             {:else}
                                 <span class="text-gray-500">Sin materias</span>
@@ -148,12 +182,23 @@
                         >
                             ELIMINAR
                         </button>
+
+                        <button
+                            class="hover:text-green-600 hover:underline cursor-pointer"
+                            onclick={() => {
+                                teacher = item;
+                                openModalAssignCourse(true);
+                            }}
+                        >
+                            ASIGNAR CURSOS
+                        </button>
                     </td>
                 </tr>
             {/each}
         </tbody>
     </table>
 </div>
+
 <style>
     .chips {
         display: flex;
@@ -168,5 +213,7 @@
         color: #333;
         font-size: 12px;
     }
-    .chip-static { pointer-events: none; }
+    .chip-static {
+        pointer-events: none;
+    }
 </style>

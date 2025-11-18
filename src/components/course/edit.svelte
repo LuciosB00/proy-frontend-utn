@@ -88,12 +88,14 @@
                 <button
                     class="close-btn"
                     aria-label="cerrar boton"
-                    onclick={() => closeModal("edit")}>✕</button
+                    onclick={() => closeModal("edit")}  
                 >
+                    ✕
+                </button>
             </div>
 
             {#if error}
-                <div class="text-center text-accent">{error}</div>
+                <div class="text-center text-red-500 mb-2">{error}</div>
             {/if}
 
             <form onsubmit={handleSubmit} class="space-y-4">
@@ -118,19 +120,19 @@
                     <label for="career">Carrera:</label>
                     <select id="career" bind:value={careerId} required>
                         <option value="">Seleccionar carrera</option>
-                        {#each careers as c}
-                            <option value={c.id}>{c.name}</option>
+                        {#each careers as career}
+                            <option value={career.id}>{career.name}</option>
                         {/each}
                     </select>
                 </div>
 
                 <div class="form-group">
                     <label for="fourMonth">Cuatrimestre:</label>
-                    <select id="fourMonth" bind:value={fourMonth} required>
-                        <option value="FIRST">1° Cuatrimestre</option>
-                        <option value="SECOND">2° Cuatrimestre</option>
-                        <option value="THIRD">3° Cuatrimestre</option>
-                        <option value="FOURTH">4° Cuatrimestre</option>
+                    <select id="fourMonth" bind:value={fourMonth}>
+                        <option value="FIRST">Primero</option>
+                        <option value="SECOND">Segundo</option>
+                        <option value="THIRD">Tercero</option>
+                        <option value="FOURTH">Cuarto</option>
                     </select>
                 </div>
 
@@ -138,13 +140,17 @@
                     <button
                         type="submit"
                         class="btn btn-success"
-                        disabled={loading}>Aceptar</button
+                        disabled={loading}
                     >
+                        {loading ? "Creando..." : "Aceptar"}
+                    </button>
                     <button
-                        onclick={() => closeModal("edit")}
+                        onclick={() => closeModal("create")}
                         type="button"
-                        class="btn btn-danger">Cancelar</button
+                        class="btn btn-danger"
                     >
+                        Cancelar
+                    </button>
                 </div>
             </form>
         </div>
@@ -189,7 +195,8 @@
         margin-bottom: 5px;
     }
 
-    .form-group input {
+    .form-group input,
+    .form-group select {
         width: 100%;
         padding: 8px;
         border: 1px solid #ddd;
@@ -218,5 +225,9 @@
     .btn-danger {
         background: #dc3545;
         color: white;
+    }
+
+    .text-red-500 {
+        color: #dc3545;
     }
 </style>
