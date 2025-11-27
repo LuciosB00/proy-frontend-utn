@@ -1,39 +1,41 @@
 <script lang="ts">
-    import Create from "./create.svelte";
-    import Edit from "./edit.svelte";
-    import Delete from "./delete.svelte";
     import { http } from "@src/core/http";
     import { onMount } from "svelte";
+    import { jwtDecode } from "jwt-decode";
     import type {
         Attendance,
         AttendanceStatus,
-        ModalType,
     } from "@src/interfaces/attendance.interface";
     import type { Career } from "@src/interfaces/career.interface";
     import type { Course } from "@src/interfaces/course.interface";
     import type { Student } from "@src/interfaces/student.interface";
     import type { Matriculation } from "@src/interfaces/matriculation.interface";
+    import type { Teacher } from "@src/interfaces/teacher.interface";
 
-    let headers = [
-        "Estudiante",
-        "Carrera",
-        "Materia",
-        "Fecha",
-        "Estado",
-        "Acciones",
-    ];
-
+    // Datos base
     let attendances = $state<Attendance[]>([]);
-    let attendance = $state<Attendance | undefined>(undefined);
-
     let careers = $state<Career[]>([]);
     let courses = $state<Course[]>([]);
     let students = $state<Student[]>([]);
     let matriculations = $state<Matriculation[]>([]);
 
-    let selectedCareerId = $state<string>("");
-    let selectedCourseId = $state<string>("");
-    let searchName = $state<string>("");
+    // Contexto del profesor logueado
+    let teacher = $state<Teacher | null>(null);
+    let teacherCourses = $derived<Course[]>(teacher?.courses ?? []);
+
+    // Acordeón de carreras
+    let expandedCareerIds = $state<Set<string>>(new Set());
+    // Acordeón de cursos
+    let expandedCourseIds = $state<Set<string>>(new Set());
+    // Fecha seleccionada por fila estudiante-curso (YYYY-MM-DD)
+    let selectedDatesByKey = $state<Record<string, string>>({});
+
+    const getCookie = (name: string): string => {
+        const match = document.cookie.match(
+            new RegExp("(^| )" + name + "=([^;]+)"),
+        );
+        return match ? match[2] : "";
+    };
 
     const getAllAttendances = async () => {
         attendances = await http.get(
@@ -61,8 +63,22 @@
                 `${import.meta.env.PUBLIC_BACKEND_API}/matriculation`,
             );
         } catch (e) {
-            // si no existe endpoint, la UI seguirá funcionando sin filtrar estudiantes por carrera
             matriculations = [];
+        }
+    };
+
+    const loadTeacher = async () => {
+        try {
+            const token = getCookie("token");
+            if (!token) return;
+            const decoded = jwtDecode<{ id: string; role: string }>(token);
+            const userId = decoded.id;
+            const list = await http.get<Teacher[]>(
+                `${import.meta.env.PUBLIC_BACKEND_API}/teacher`,
+            );
+            teacher = list.find((t) => t.user?.id === userId) ?? null;
+        } catch (e) {
+            console.error("No se pudo obtener el profesor logueado", e);
         }
     };
 
@@ -74,8 +90,10 @@
             getAllStudents(),
             getAllMatriculations(),
         ]);
+        await loadTeacher();
     });
 
+    // Índices
     const courseById = $derived<Record<string, Course>>(
         Object.fromEntries(courses.map((c) => [c.id, c])),
     );
@@ -83,26 +101,85 @@
         Object.fromEntries(students.map((s) => [s.id, s])),
     );
 
-    const filteredCourses = $derived(() =>
-        selectedCareerId
-            ? courses.filter((c) => c.career?.id === selectedCareerId)
-            : courses,
+    // Cursos del profesor por carrera
+    const teacherCoursesByCareer = $derived<Record<string, Course[]>>(
+        teacherCourses.reduce(
+            (grouped, c) => {
+                const careerId = c.career?.id ?? "";
+                if (!careerId) return grouped;
+                (grouped[careerId] ??= []).push(c);
+                return grouped;
+            },
+            {} as Record<string, Course[]>,
+        ),
     );
 
-    const filteredAttendances = $derived(() => {
-        const q = searchName.trim().toLowerCase();
-        return attendances.filter((a) => {
-            const cObj = a.course ?? courseById[a.courseId];
-            const careerId = cObj?.career?.id;
-            if (selectedCareerId && careerId !== selectedCareerId) return false;
-            const courseId = a.course?.id ?? a.courseId;
-            if (selectedCourseId && courseId !== selectedCourseId) return false;
-            const sObj = a.student ?? studentById[a.studentId];
-            const name = (sObj?.user?.fullName ?? "").toLowerCase();
-            if (q && !name.includes(q)) return false;
-            return true;
-        });
-    });
+    const careersForTeacher = $derived<Career[]>(
+        careers.filter((c) =>
+            Object.keys(teacherCoursesByCareer).includes(c.id),
+        ),
+    );
+
+    // Estudiantes por curso (vía matriculaciones)
+    const studentsByCourse = $derived<Record<string, Student[]>>(
+        matriculations.reduce(
+            (grouped, m) => {
+                const s = studentById[m.studentId];
+                if (!s) return grouped;
+                const arr = grouped[m.courseId] ?? (grouped[m.courseId] = []);
+                if (!arr.some((st) => st.id === s.id)) arr.push(s);
+                return grouped;
+            },
+            {} as Record<string, Student[]>,
+        ),
+    );
+
+    // Último estado conocido por estudiante-curso
+    const latestAttendanceByKey = $derived<Record<string, Attendance>>(
+        attendances.reduce(
+            (map, a) => {
+                const key = `${a.studentId}|${a.courseId}`;
+                const prev = map[key];
+                const curTime = a.attendanceDate
+                    ? new Date(a.attendanceDate).getTime()
+                    : 0;
+                const prevTime = prev?.attendanceDate
+                    ? new Date(prev.attendanceDate).getTime()
+                    : -1;
+                if (!prev || curTime >= prevTime) map[key] = a;
+                return map;
+            },
+            {} as Record<string, Attendance>,
+        ),
+    );
+
+    const statusClass = (s?: AttendanceStatus) => {
+        if (s === "PRESENT") return "status status-present";
+        if (s === "LATE") return "status status-late";
+        if (s === "ABSENT") return "status status-absent";
+        return "status";
+    };
+
+    const toggleCareer = (id: string) => {
+        if (expandedCareerIds.has(id)) {
+            expandedCareerIds.delete(id);
+        } else {
+            expandedCareerIds.add(id);
+        }
+        // fuerza reactividad del Set
+        expandedCareerIds = new Set(expandedCareerIds);
+    };
+
+    const toggleCourse = (id: string) => {
+        if (expandedCourseIds.has(id)) {
+            expandedCourseIds.delete(id);
+        } else {
+            expandedCourseIds.add(id);
+        }
+        expandedCourseIds = new Set(expandedCourseIds);
+    };
+
+    const keyFor = (studentId: string, courseId: string) => `${studentId}|${courseId}`;
 
     const toDateInputValue = (d?: Date) => {
         if (!d) return "";
@@ -114,175 +191,227 @@
         }
     };
 
-    const updateAttendanceStatus = async (
-        a: Attendance,
+    const todayDateString = () => new Date().toISOString().substring(0, 10);
+
+    const getRowDateValue = (studentId: string, courseId: string): string => {
+        const key = keyFor(studentId, courseId);
+        const latest = findLatestAttendance(studentId, courseId);
+        return (
+            selectedDatesByKey[key] ??
+            (latest?.attendanceDate ? toDateInputValue(latest.attendanceDate) : todayDateString())
+        );
+    };
+
+    const onRowDateChange = async (studentId: string, courseId: string, dateStr: string) => {
+        const key = keyFor(studentId, courseId);
+        selectedDatesByKey[key] = dateStr;
+        const existing = findLatestAttendance(studentId, courseId);
+        if (existing) {
+            try {
+                await http.patch(
+                    `${import.meta.env.PUBLIC_BACKEND_API}/attendance/${existing.id}`,
+                    { attendanceDate: new Date(dateStr) },
+                );
+                await getAllAttendances();
+            } catch (e) {
+                console.error("Error al actualizar fecha", e);
+            }
+        }
+    };
+
+    const findLatestAttendance = (
+        studentId: string,
+        courseId: string,
+    ): Attendance | null => {
+        const key = `${studentId}|${courseId}`;
+        return latestAttendanceByKey[key] ?? null;
+    };
+
+    const assignStatus = async (
+        studentId: string,
+        courseId: string,
         attendanceState: AttendanceStatus,
     ) => {
         try {
-            const body: any = { attendanceState };
-            if (!a.attendanceDate) {
-                body.attendanceDate = new Date();
+            const existing = findLatestAttendance(studentId, courseId);
+            const key = keyFor(studentId, courseId);
+            const dateStr = selectedDatesByKey[key] ?? todayDateString();
+            if (existing) {
+                const body: any = { attendanceState, attendanceDate: new Date(dateStr) };
+                await http.patch(
+                    `${import.meta.env.PUBLIC_BACKEND_API}/attendance/${existing.id}`,
+                    body,
+                );
+            } else {
+                await http.post(
+                    `${import.meta.env.PUBLIC_BACKEND_API}/attendance`,
+                    {
+                        studentId,
+                        courseId,
+                        attendanceState,
+                        attendanceDate: new Date(dateStr),
+                    },
+                );
             }
-            await http.patch(
-                `${import.meta.env.PUBLIC_BACKEND_API}/attendance/${a.id}`,
-                body,
-            );
             await getAllAttendances();
         } catch (e) {
-            console.error("Error al actualizar estado:", e);
+            console.error("Error al asignar estado", e);
         }
-    };
-
-    const updateAttendanceDate = async (a: Attendance, dateStr: string) => {
-        try {
-            const body: any = {
-                attendanceDate: new Date(dateStr),
-            };
-            await http.patch(
-                `${import.meta.env.PUBLIC_BACKEND_API}/attendance/${a.id}`,
-                body,
-            );
-            await getAllAttendances();
-        } catch (e) {
-            console.error("Error al actualizar fecha:", e);
-        }
-    };
-
-    let openModalCreate = $state(false);
-    let openModalEdit = $state(false);
-    let openModalDelete = $state(false);
-
-    const openModal = (name: ModalType) => {
-        if (name === "create") openModalCreate = true;
-        if (name === "edit") openModalEdit = true;
-        if (name === "delete") openModalDelete = true;
-    };
-
-    const closeModal = (name: ModalType) => {
-        if (name === "create") openModalCreate = false;
-        if (name === "edit") openModalEdit = false;
-        if (name === "delete") openModalDelete = false;
-    };
-
-    const statusClass = (s?: AttendanceStatus) => {
-        if (s === "PRESENT") return "status status-present";
-        if (s === "LATE") return "status status-late";
-        if (s === "ABSENT") return "status status-absent";
-        return "status";
     };
 </script>
 
-<Create {openModalCreate} {closeModal} {getAllAttendances} />
-<Edit {openModalEdit} {closeModal} {getAllAttendances} {attendance} />
-<Delete {openModalDelete} {closeModal} {getAllAttendances} {attendance} />
-
-<div class="toolbar">
-    <div class="filters">
-        <div class="filter">
-            <label for="career-select">Carrera</label>
-            <select bind:value={selectedCareerId}>
-                <option value="">Todas</option>
-                {#each careers as c}
-                    <option value={c.id}>{c.name}</option>
-                {/each}
-            </select>
-        </div>
-        <div class="filter">
-            <label for="course-select">Materia</label>
-            <select bind:value={selectedCourseId}>
-                <option value="">Todas</option>
-                {#each filteredCourses() as c}
-                    <option value={c.id}>{c.name}</option>
-                {/each}
-            </select>
-        </div>
-        <div class="filter">
-            <label for="student-search">Buscar estudiante</label>
-            <input
-                type="text"
-                placeholder="Nombre..."
-                bind:value={searchName}
-            />
-        </div>
+{#if !teacher}
+    <div class="info">
+        No se pudo identificar al profesor o no tiene cursos asignados.
     </div>
-    <button class="btn btn-primary" onclick={() => openModal("create")}
-        >Crear asistencia</button
-    >
-</div>
+{/if}
 
-<table class="table">
-    <thead>
-        <tr>
-            {#each headers as h}
-                <th>{h}</th>
-            {/each}
-        </tr>
-    </thead>
-    <tbody>
-        {#each filteredAttendances() as a}
-            <tr>
-                <td
-                    >{a.student?.user?.fullName ??
-                        studentById[a.studentId]?.user?.fullName ??
-                        a.studentId}</td
+{#if teacher}
+    <div class="accordion">
+        {#each careersForTeacher as career}
+            <div class="career-item">
+                <button
+                    type="button"
+                    class="career-header"
+                    aria-expanded={expandedCareerIds.has(career.id)}
+                    onclick={() => toggleCareer(career.id)}
                 >
-                <td
-                    >{a.course?.career?.name ??
-                        courseById[a.courseId]?.career?.name ??
-                        "-"}</td
-                >
-                <td>
-                    {a.course?.name ?? courseById[a.courseId]?.name ?? "-"}
-                </td>
-                <td>
-                    <input
-                        type="date"
-                        value={toDateInputValue(a.attendanceDate)}
-                        onchange={(e: Event) =>
-                            updateAttendanceDate(
-                                a,
-                                (e.target as HTMLInputElement).value,
-                            )}
-                    />
-                </td>
-                <td>
-                    <select
-                        class={statusClass(a.attendanceState)}
-                        bind:value={a.attendanceState}
-                        onchange={(e: Event) =>
-                            updateAttendanceStatus(
-                                a,
-                                (e.target as HTMLSelectElement)
-                                    .value as AttendanceStatus,
-                            )}
+                    <span class="career-title">{career.name}</span>
+                    <span class="badge"
+                        >{teacherCoursesByCareer[career.id]?.length ?? 0} cursos</span
                     >
-                        <option value="PRESENT">Presente</option>
-                        <option value="LATE">Tarde</option>
-                        <option value="ABSENT">Ausente</option>
-                    </select>
-                </td>
-                <td class="actions">
-                    <button
-                        class="btn btn-warning"
-                        onclick={() => {
-                            attendance = a;
-                            openModal("edit");
-                        }}>EDITAR</button
+                    <span class="toggle"
+                        >{expandedCareerIds.has(career.id) ? "▼" : "▶"}</span
                     >
-                    <button
-                        class="btn btn-danger"
-                        onclick={() => {
-                            attendance = a;
-                            openModal("delete");
-                        }}>ELIMINAR</button
-                    >
-                </td>
-            </tr>
+                </button>
+                {#if expandedCareerIds.has(career.id)}
+                    <div class="career-content">
+                        {#each teacherCoursesByCareer[career.id] as course}
+                            <div class="course-block">
+                                <button
+                                    type="button"
+                                    class="course-title"
+                                    aria-expanded={expandedCourseIds.has(course.id)}
+                                    onclick={() => toggleCourse(course.id)}
+                                >
+                                    {course.name}
+                                    <span class="badge"
+                                        >{studentsByCourse[course.id]?.length ?? 0}
+                                        alumnos</span
+                                    >
+                                    <span class="toggle"
+                                        >{expandedCourseIds.has(course.id)
+                                            ? "▼"
+                                            : "▶"}</span
+                                    >
+                                </button>
+                                {#if expandedCourseIds.has(course.id)}
+                                    {#if studentsByCourse[course.id]?.length}
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Estudiante</th>
+                                                    <th>Estado</th>
+                                                    <th>Fecha</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {#each studentsByCourse[course.id] as st (st.id)}
+                                                    <tr>
+                                                        <td>{st.user?.fullName ?? st.id}</td>
+                                                        <td>
+                                                            <select
+                                                                class={statusClass(
+                                                                    findLatestAttendance(st.id, course.id)?.attendanceState,
+                                                                )}
+                                                                value={findLatestAttendance(st.id, course.id)?.attendanceState ?? ""}
+                                                                onchange={(e: Event) =>
+                                                                    assignStatus(
+                                                                        st.id,
+                                                                        course.id,
+                                                                        (e.target as HTMLSelectElement).value as AttendanceStatus,
+                                                                    )
+                                                                }
+                                                            >
+                                                                <option value="">Seleccionar...</option>
+                                                                <option value="PRESENT">Presente</option>
+                                                                <option value="LATE">Tarde</option>
+                                                                <option value="ABSENT">Ausente</option>
+                                                            </select>
+                                                        </td>
+                                                        <td>
+                                                            <input
+                                                                type="date"
+                                                                value={getRowDateValue(st.id, course.id)}
+                                                                onchange={(e: Event) =>
+                                                                    onRowDateChange(
+                                                                        st.id,
+                                                                        course.id,
+                                                                        (e.target as HTMLInputElement).value,
+                                                                    )
+                                                                }
+                                                            />
+                                                        </td>
+                                                    </tr>
+                                                {/each}
+                                            </tbody>
+                                        </table>
+                                    {:else}
+                                        <div class="empty">No hay estudiantes matriculados en esta materia.</div>
+                                    {/if}
+                                {/if}
+                            </div>
+                        {/each}
+                    </div>
+                {/if}
+            </div>
         {/each}
-    </tbody>
-</table>
+    </div>
+{/if}
 
 <style>
+    .accordion {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    .career-item {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .career-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 12px;
+        background: #f7f7f7;
+        cursor: pointer;
+    }
+    .career-title {
+        font-weight: 600;
+    }
+    .badge {
+        background: #eee;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 12px;
+    }
+    .career-content {
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+    .course-block {
+        border: 1px dashed #ddd;
+        border-radius: 6px;
+        padding: 8px;
+    }
+    .course-title {
+        font-weight: 500;
+        margin-bottom: 8px;
+    }
     .table {
         width: 100%;
         border-collapse: collapse;
@@ -292,40 +421,9 @@
         border: 1px solid #ddd;
         padding: 8px;
     }
-    .toolbar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 12px;
-    }
-    .filters {
-        display: flex;
-        gap: 12px;
-    }
-    .filter {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-    }
-    .btn {
-        padding: 6px 10px;
-        border-radius: 6px;
-    }
-    .btn-primary {
-        background: #007bff;
-        color: #fff;
-    }
-    .btn-warning {
-        background: #ffc107;
-        color: #000;
-    }
-    .btn-danger {
-        background: #dc3545;
-        color: #fff;
-    }
-    .actions {
-        display: flex;
-        gap: 8px;
+    .empty {
+        color: #777;
+        font-size: 14px;
     }
     .status-present {
         background: #28a745;
@@ -338,5 +436,9 @@
     .status-absent {
         background: #dc3545;
         color: #fff;
+    }
+    .info {
+        margin: 12px 0;
+        color: #555;
     }
 </style>
