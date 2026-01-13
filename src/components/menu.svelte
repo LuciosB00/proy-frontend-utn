@@ -34,16 +34,6 @@
                 </a>
             </li>
             {/if}
-            {#if path.role.includes(user?.role)}
-            <li>
-                <a
-                    class="text-white font-bold hover:text-accent"
-                    href={path.path}
-                >
-                    {path.name}
-                </a>
-            </li>
-            {/if}
         {/each}
     </ul>
 </nav>
